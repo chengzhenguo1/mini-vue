@@ -30,7 +30,6 @@ describe("effect", () => {
 
     expect(foo).toBe(1);
     runner();
-    console.log(runner)
     expect(runner()).toBe(3);
   });
 
