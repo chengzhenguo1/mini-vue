@@ -48,7 +48,7 @@ function cleanupEffect(effect) {
     dep.delete(effect)
   });
 
-   // 把 effect.deps 清空
+  // 把 effect.deps 清空
   effect.deps.length = 0
 }
 
@@ -71,6 +71,16 @@ export function track(target, key) {
     depsMap.set(key, dep)
   }
 
+  trackEffects(dep)
+}
+
+export function trackRefValue(ref) {
+  if (isTracking()) {
+    trackEffects(ref.dep);
+  }
+}
+
+function trackEffects(dep) {
   // 看看 dep 之前有没有添加过，添加过的话 那么就不添加了
   if (dep.has(activeEffect)) {
     return
@@ -87,13 +97,17 @@ export function isTracking() {
 export function trigger(target, key) {
   const depsMap = targetMap.get(target)
 
-  const deps = depsMap.get(key)
+  const dep = depsMap.get(key)
 
-  for (let dep of deps) {
-    if (dep.scheduler) {
-      dep.scheduler()
+  triggerEffects(dep)
+}
+
+export function triggerEffects(dep) {
+  for (let effect of dep) {
+    if (effect.scheduler) {
+      effect.scheduler()
     } else {
-      dep.run()
+      effect.run()
     }
   }
 }
