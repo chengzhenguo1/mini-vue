@@ -1,4 +1,5 @@
 import { track, trigger } from "./effect"
+import { ReactiveFlags } from "./reactive"
 
 // 利用缓存，防止每次get都调用函数
 const get = createGetter()
@@ -11,7 +12,7 @@ export const mutableHandlers = {
 }
 
 export const readonlyHandlers = {
-  readonlyGet,
+  get: readonlyGet,
   set(target, key) {
     console.warn(`${key}赋值失败，因为${target}是只读的`)
     return true
@@ -20,6 +21,13 @@ export const readonlyHandlers = {
 
 function createGetter(isReadonly: boolean = false) {
   return function get(target, key) {
+    // 判断key是否是isReadonly函数调用的
+    if (key === ReactiveFlags.IS_REACTIVE) {
+      return !isReadonly
+    } else if (key === ReactiveFlags.IS_READONLY) {
+      return isReadonly
+    }
+
     const res = Reflect.get(target, key)
     if (!isReadonly) {
       // 收集依赖

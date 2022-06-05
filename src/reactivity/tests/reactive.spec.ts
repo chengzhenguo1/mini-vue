@@ -1,4 +1,4 @@
-import { reactive } from '../reactive'
+import { isReactive, isReadonly, reactive } from '../reactive'
 
 describe('reactive', () => {
   it('happy path', () => {
@@ -12,5 +12,8 @@ describe('reactive', () => {
 
     // 响应式包裹的对象不等于原始对象
     expect(obj).not.toBe(user)
+
+    expect(isReactive(obj)).toBe(true)
+    expect(isReadonly(obj)).toBe(false)
   })
 })
