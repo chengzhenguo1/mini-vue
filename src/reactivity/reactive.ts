@@ -1,4 +1,4 @@
-import { mutableHandlers, readonlyHandlers } from "./baseHandler";
+import { mutableHandlers, readonlyHandlers, shallowHandlers } from "./baseHandler";
 
 export const enum ReactiveFlags {
   IS_REACTIVE = '__V_IS_REACTIVE',
@@ -11,6 +11,11 @@ export function reactive(raw) {
 
 export function readonly(raw) {
   return createReactiveObject(raw, readonlyHandlers)
+}
+
+// 只对对象第一层进行只读
+export function shallowReadonly(raw) {
+  return createReactiveObject(raw, shallowHandlers)
 }
 
 export function isReadonly(value) {
