@@ -29,12 +29,13 @@ function createGetter(isReadonly: boolean = false) {
       return isReadonly
     }
 
+    const res = Reflect.get(target, key)
+
     // 判断是否是对象,如果是对象，则嵌套添加响应式
-    if (isObject(target)) {
-      return isReadonly ? readonly(target) : reactive(target)
+    if (isObject(res)) {
+      return isReadonly ? readonly(res) : reactive(res)
     }
 
-    const res = Reflect.get(target, key)
     if (!isReadonly) {
       // 收集依赖
       track(target, key)

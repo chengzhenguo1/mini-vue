@@ -1,5 +1,7 @@
 import { extend } from "../shared"
 
+let activeEffect
+let shouldTrack = true
 class ReactiveEffect {
   private _fn: any
   // 保存当前实例
@@ -14,11 +16,20 @@ class ReactiveEffect {
   constructor(fn, scheduler?: Function) {
     this._fn = fn
     this.scheduler = scheduler
-    activeEffect = this
   }
 
   run() {
-    return this._fn()
+    if (!this.active) {
+      return this._fn()
+    }
+
+    activeEffect = this
+    shouldTrack = true
+    const result = this._fn()
+    // reset
+    shouldTrack = false
+
+    return result
   }
 
   stop() {
@@ -34,16 +45,20 @@ class ReactiveEffect {
 
 function cleanupEffect(effect) {
   effect.deps.forEach((dep: any) => {
-    dep.delete(effect);
+    dep.delete(effect)
   });
+
+   // 把 effect.deps 清空
+  effect.deps.length = 0
 }
 
 
-let activeEffect
 
 // 收集依赖
 const targetMap = new Map()
 export function track(target, key) {
+  if (!isTracking()) return
+
   let depsMap = targetMap.get(target)
   if (!depsMap) {
     depsMap = new Map()
@@ -56,12 +71,17 @@ export function track(target, key) {
     depsMap.set(key, dep)
   }
 
-  if (!activeEffect) {
+  // 看看 dep 之前有没有添加过，添加过的话 那么就不添加了
+  if (dep.has(activeEffect)) {
     return
   }
 
   dep.add(activeEffect)
   activeEffect.deps.push(dep)
+}
+
+export function isTracking() {
+  return shouldTrack && activeEffect !== undefined;
 }
 
 export function trigger(target, key) {
