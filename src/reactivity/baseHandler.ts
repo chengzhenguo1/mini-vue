@@ -2,7 +2,7 @@ import { extend, isObject } from "../shared"
 import { track, trigger } from "./effect"
 import { reactive, ReactiveFlags, readonly } from "./reactive"
 
-// 利用缓存，防止每次get都调用函数
+// 利用缓存，防止每次get都重新调用函数
 const get = createGetter()
 const set = createSetter()
 const readonlyGet = createGetter(true)

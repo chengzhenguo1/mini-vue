@@ -28,6 +28,10 @@ export function isReactive(value) {
   return !!value[ReactiveFlags.IS_REACTIVE]
 }
 
+export function isProxy(value) {
+  return isReactive(value) || isReadonly(value)
+}
+
 function createReactiveObject(target, baseHandles) {
   return new Proxy(target, baseHandles)
 }
