@@ -2,7 +2,7 @@ import { extend } from "../shared"
 
 let activeEffect
 let shouldTrack = true
-class ReactiveEffect {
+export class ReactiveEffect {
   private _fn: any
   // 保存当前实例
   public deps: any[] = []
