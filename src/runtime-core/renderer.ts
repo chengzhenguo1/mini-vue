@@ -73,4 +73,5 @@ function setupRenderEffect(instance, vnode, container) {
   patch(subTree, container)
   // 取出返回结果，将el赋值给vnode.el上
   vnode.el = subTree.el
+  // 测试
 }
