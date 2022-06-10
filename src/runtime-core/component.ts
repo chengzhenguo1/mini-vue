@@ -1,4 +1,5 @@
 import { isObject } from "../shared";
+import { PublicInstanceProxyHandler } from "./componentPublicInstance";
 
 export function setupComponent(instance) {
   // TODO 处理props和slots
@@ -20,7 +21,7 @@ function setupStatefulComponent(instance) {
   }
 }
 
-export function createComponentInstance(vnode) {
+export function createComponentInstance(vnode): any {
   const component = {
     vnode,
     type: vnode.type
@@ -41,6 +42,8 @@ function handelSetupResult(instance, setupResult) {
 function finishComponentSetup(instance: any) {
   const Component = instance.type
   instance.render = Component.render
+
+  instance.proxy = new Proxy({ _: instance }, PublicInstanceProxyHandler)
 
   // if (!Component.render) {
   // }

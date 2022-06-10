@@ -3,6 +3,7 @@ import { createComponentInstance, setupComponent } from "./component"
 
 interface VNodeType {
   type: string | Function
+  el?: Element
   props: Object
   children: Array<VNodeType> | string
 }
@@ -33,6 +34,8 @@ function processComponent(vnode: VNodeType, container: Element) {
 function mountElement(vnode: VNodeType, container: Element) {
   const { type, props, children } = vnode
   const element: Element = document.createElement((<string>type))
+  // 保存当前的el，后续this.$el调用
+  vnode.el = element
 
   for (let key in props) {
     const value = props[key]
@@ -53,7 +56,7 @@ function mountComponent(vnode: VNodeType, container: Element) {
   const instance = createComponentInstance(vnode)
 
   setupComponent(instance)
-  setupRenderEffect(instance, container)
+  setupRenderEffect(instance, vnode, container)
 }
 
 function mountChildren(children: VNodeType[], container: Element) {
@@ -62,8 +65,12 @@ function mountChildren(children: VNodeType[], container: Element) {
   })
 }
 
-function setupRenderEffect(instance, container) {
-  const subTree = instance.render()
+function setupRenderEffect(instance, vnode, container) {
+  const { proxy } = instance
+  // 在App组件中，render函数会被调用,App的this指向实例
+  const subTree = instance.render.call(proxy)
 
   patch(subTree, container)
+  // 取出返回结果，将el赋值给vnode.el上
+  vnode.el = subTree.el
 }
