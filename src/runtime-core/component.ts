@@ -1,3 +1,4 @@
+import { isObject } from "../shared";
 
 export function setupComponent(instance) {
   // TODO 处理props和slots
@@ -5,15 +6,6 @@ export function setupComponent(instance) {
   // initSlots()
 
   setupStatefulComponent(instance)
-}
-
-export function createComponentInstance(vnode) {
-  const component = {
-    vnode,
-    type: vnode.type
-  }
-
-  return component
 }
 
 function setupStatefulComponent(instance) {
@@ -27,8 +19,18 @@ function setupStatefulComponent(instance) {
     handelSetupResult(instance, setupResult)
   }
 }
+
+export function createComponentInstance(vnode) {
+  const component = {
+    vnode,
+    type: vnode.type
+  }
+
+  return component
+}
+
 function handelSetupResult(instance, setupResult) {
-  if (typeof setupResult === 'object') {
+  if (isObject(setupResult)) {
     // 保存数据
     instance.setupState = setupResult
   }

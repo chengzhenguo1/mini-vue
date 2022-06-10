@@ -5,6 +5,10 @@ export const isObject = (val: unknown): val is Object => {
   return val !== null && typeof val === 'object'
 }
 
+export const isString = (val: unknown): val is string => typeof val === 'string'
+
+export const isArray = (val: unknown): val is Array<any> => Array.isArray(val)
+
 export const hasChanged = (oldValue, newValue) => {
   return !Object.is(oldValue, newValue)
 }
