@@ -41,9 +41,18 @@ function mountElement(vnode: VNodeType, container: Element) {
 
   for (let key in props) {
     const value = props[key]
-    element.setAttribute(key, value)
+
+    const isEvent = key => /^on[A-Z]/.test(key)
+
+    if (isEvent(key)) {
+      // 添加事件监听
+      const event = key.slice(2).toLocaleLowerCase()
+      element.addEventListener(event, value)
+    } else {
+      element.setAttribute(key, value)
+    }
   }
-  
+
   if (shapeFlags & ShapeFlags.TEXT_CHILDREN) {
     element.textContent = (children as string)
   } else if (shapeFlags & ShapeFlags.ARRAY_CHILDREN) {
