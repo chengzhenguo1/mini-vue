@@ -1,4 +1,5 @@
 import { h } from '../lib/mini-vue.esm.js'
+import { Foo } from './foo.js'
 
 export const App = {
   render() {
@@ -9,7 +10,7 @@ export const App = {
 
     setTimeout(() => {
       console.log(this.$el)
-    }, 50);
+    }, 5000);
 
     return h('div',
       {
@@ -19,7 +20,11 @@ export const App = {
           console.log(`${this.msg} 啊哈哈`)
         }
       },
-      `msg: ${this.msg}`)
+      [
+        h('div', {}, 'hello div1'),
+        h(Foo, { foo: '我是传进来的Foo' })
+      ])
+    // `msg: ${this.msg}`)
     // [
     //   h('p', { id: 'p1', class: 'h2' }, 'hello 1'),
     //   h('p', { id: 'p2', class: 'h3' }, 'hello 2')

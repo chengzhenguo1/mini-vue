@@ -16,7 +16,7 @@ export const mutableHandlers = {
 export const readonlyHandlers = {
   get: readonlyGet,
   set(target, key) {
-    console.warn(`${key}赋值失败，因为${target}是只读的`)
+    console.warn(`${key}赋值失败，因为${key}是只读的`)
     return true
   }
 }
@@ -36,6 +36,7 @@ function createGetter(isReadonly = false, shallow = false) {
 
     const res = Reflect.get(target, key)
 
+    // 只做第一层处理
     if (shallow) {
       return res
     }
