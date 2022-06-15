@@ -105,7 +105,4 @@ function setupRenderEffect(instance, vnode, container) {
   vnode.el = subTree.el
   // 测试
 }
-function processTextNode(vnode: VNodeType, container: Element) {
-  throw new Error("Function not implemented.");
-}
 

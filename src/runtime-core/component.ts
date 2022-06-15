@@ -4,6 +4,7 @@ import { emit } from "./componentEmit";
 import { initProps } from "./componentProps";
 import { PublicInstanceProxyHandler } from "./componentPublicInstance";
 import { initSlots } from "./componentSlots";
+import { VNodeType } from "./renderer";
 
 export function setupComponent(instance) {
   // 处理props和slots
@@ -19,9 +20,14 @@ function setupStatefulComponent(instance) {
   const { setup } = Component;
 
   if (setup) {
+    // 设置instance，调用setup的时候，可以获取当前组件实例
+    setCurrentInstance(instance)
     const setupResult = setup(shallowReadonly(instance.vnode.props), { emit: instance.emit })
 
     handelSetupResult(instance, setupResult)
+    
+    // 清空instance
+    setCurrentInstance(null)
   }
 }
 
@@ -54,8 +60,16 @@ function finishComponentSetup(instance: any) {
   instance.render = Component.render
 
   instance.proxy = new Proxy({ _: instance }, PublicInstanceProxyHandler)
-
-  // if (!Component.render) {
-  // }
 }
 
+let currentInstance: VNodeType | null = null
+
+// 返回当前组件实例，利用全局变量，可以在setup中调用
+export const getCurrentInstance = () => {
+  return currentInstance
+}
+
+// 设置当前组件实例
+const setCurrentInstance = (instance: VNodeType | null) => {
+  currentInstance = instance
+}
