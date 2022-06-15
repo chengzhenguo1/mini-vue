@@ -5,7 +5,7 @@ export const Foo = {
     props.foo = '123'
 
     function onClick() {
-      console.log('按钮事件触发')
+      console.log('按钮触发')
       emit('sendMsg', 10, 20)
       emit('get-msg')
     }
