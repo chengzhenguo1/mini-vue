@@ -1,7 +1,9 @@
 import { shallowReadonly } from "../reactivity/reactive";
 import { isObject } from "../shared";
+import { emit } from "./componentEmit";
 import { initProps } from "./componentProps";
 import { PublicInstanceProxyHandler } from "./componentPublicInstance";
+import { VNodeType } from "./renderer";
 
 export function setupComponent(instance) {
   // TODO 处理props和slots
@@ -17,7 +19,7 @@ function setupStatefulComponent(instance) {
   const { setup } = Component;
 
   if (setup) {
-    const setupResult = setup(shallowReadonly(instance.vnode.props))
+    const setupResult = setup(shallowReadonly(instance.vnode.props), { emit: instance.emit })
 
     handelSetupResult(instance, setupResult)
   }
@@ -28,8 +30,11 @@ export function createComponentInstance(vnode): any {
     vnode,
     type: vnode.type,
     setupState: {},
-    props: {}
+    props: {},
+    emit: () => { }
   }
+
+  component.emit = emit.bind(null, component) as any
 
   return component
 }

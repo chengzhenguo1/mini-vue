@@ -9,6 +9,8 @@ export const isString = (val: unknown): val is string => typeof val === 'string'
 
 export const isArray = (val: unknown): val is Array<any> => Array.isArray(val)
 
+export const hasOwn = (obj, key) => Object.hasOwnProperty.call(obj, key)
+
 export const hasChanged = (oldValue, newValue) => {
   return !Object.is(oldValue, newValue)
 }

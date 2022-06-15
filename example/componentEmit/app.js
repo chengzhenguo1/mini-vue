@@ -1,4 +1,4 @@
-import { h } from '../lib/mini-vue.esm.js'
+import { h } from '../../lib/mini-vue.esm.js'
 import { Foo } from './foo.js'
 
 export const App = {
@@ -16,13 +16,21 @@ export const App = {
       {
         id: 'test',
         class: 'h',
-        onClick: () => {
-          console.log(`${this.msg} 啊哈哈`)
-        }
+        // onClick: () => {
+        //   console.log(`${this.msg} 啊哈哈`)
+        // }
       },
       [
         h('div', {}, 'hello div1'),
-        h(Foo, { foo: '我是传进来的Foo' })
+        h(Foo, {
+          foo: '我是传进来的Foo',
+          onSendMsg: (a, b) => {
+            console.log('监听onSendMsg发生改变了', a, b)
+          },
+          onGetMsg: () => {
+            console.log('监听onGETMsg触发了')
+          }
+        })
       ])
     // `msg: ${this.msg}`)
     // [

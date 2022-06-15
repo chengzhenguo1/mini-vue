@@ -1,7 +1,7 @@
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component"
 
-interface VNodeType {
+export interface VNodeType {
   type: string | Function
   el?: Element
   props: Object
