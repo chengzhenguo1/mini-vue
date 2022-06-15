@@ -3,12 +3,12 @@ import { isObject } from "../shared";
 import { emit } from "./componentEmit";
 import { initProps } from "./componentProps";
 import { PublicInstanceProxyHandler } from "./componentPublicInstance";
-import { VNodeType } from "./renderer";
+import { initSlots } from "./componentSlots";
 
 export function setupComponent(instance) {
-  // TODO 处理props和slots
+  // 处理props和slots
   initProps(instance, instance.vnode.props)
-  // initSlots()
+  initSlots(instance, instance.vnode.children)
 
   setupStatefulComponent(instance)
 }
@@ -31,6 +31,7 @@ export function createComponentInstance(vnode): any {
     type: vnode.type,
     setupState: {},
     props: {},
+    slots: {},
     emit: () => { }
   }
 

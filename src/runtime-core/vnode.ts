@@ -12,7 +12,7 @@ export function createVNode(type, props?, children?) {
   return vnode
 }
 
-function getShapeFlags(type: any,children: any) {
+function getShapeFlags(type: any, children: any) {
   let flags = 0
   if (isString(type)) {
     flags |= ShapeFlags.ELEMENT
@@ -24,6 +24,10 @@ function getShapeFlags(type: any,children: any) {
     flags |= ShapeFlags.TEXT_CHILDREN
   } else if (isArray(children)) {
     flags |= ShapeFlags.ARRAY_CHILDREN
+  }
+
+  if (flags & ShapeFlags.COMPONENT_STATEFUL && isObject(children)) {
+    flags |= ShapeFlags.SLOT_CHILDREN
   }
 
   return flags
