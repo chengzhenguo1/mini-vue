@@ -1,5 +1,6 @@
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component"
+import { Fragment } from "./vnode";
 
 export interface VNodeType {
   type: string | Function
@@ -14,14 +15,33 @@ export function render(vnode: VNodeType, container: Element) {
 }
 
 function patch(vnode: VNodeType, container: Element) {
-  const { shapeFlags } = vnode
-
-  if (shapeFlags & ShapeFlags.ELEMENT) {
-    // element类型
-    processElement(vnode, container)
-  } else if (shapeFlags & ShapeFlags.COMPONENT_STATEFUL) {
-    processComponent(vnode, container)
+  const { shapeFlags, type } = vnode
+  switch (type) {
+    case (Fragment as any):
+      processFragment(vnode, container)
+      break;
+    case (Text as any):
+      processTextVNode(vnode, container)
+      break;
+    default:
+      if (shapeFlags & ShapeFlags.ELEMENT) {
+        // element类型
+        processElement(vnode, container)
+      } else if (shapeFlags & ShapeFlags.COMPONENT_STATEFUL) {
+        processComponent(vnode, container)
+      }
+      break;
   }
+}
+
+function processFragment(vnode: VNodeType, container: Element) {
+  mountChildren((vnode.children as any), container)
+}
+
+function processTextVNode(vnode: VNodeType, container: Element) {
+  const { children } = vnode
+  const textNode = document.createTextNode((children as string))
+  container.append(textNode)
 }
 
 function processElement(vnode: VNodeType, container: Element) {
@@ -85,3 +105,7 @@ function setupRenderEffect(instance, vnode, container) {
   vnode.el = subTree.el
   // 测试
 }
+function processTextNode(vnode: VNodeType, container: Element) {
+  throw new Error("Function not implemented.");
+}
+
