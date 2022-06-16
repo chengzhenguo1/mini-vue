@@ -14,11 +14,11 @@ export function render(vnode: VNodeType, container: Element) {
   patch(vnode, container)
 }
 
-function patch(vnode: VNodeType, container: Element) {
+function patch(vnode: VNodeType, container: Element, parentComponent?: VNodeType) {
   const { shapeFlags, type } = vnode
   switch (type) {
     case (Fragment as any):
-      processFragment(vnode, container)
+      processFragment(vnode, container, parentComponent)
       break;
     case (Text as any):
       processTextVNode(vnode, container)
@@ -26,16 +26,16 @@ function patch(vnode: VNodeType, container: Element) {
     default:
       if (shapeFlags & ShapeFlags.ELEMENT) {
         // element类型
-        processElement(vnode, container)
+        processElement(vnode, container, parentComponent)
       } else if (shapeFlags & ShapeFlags.COMPONENT_STATEFUL) {
-        processComponent(vnode, container)
+        processComponent(vnode, container, parentComponent)
       }
       break;
   }
 }
 
-function processFragment(vnode: VNodeType, container: Element) {
-  mountChildren((vnode.children as any), container)
+function processFragment(vnode: VNodeType, container: Element, parentComponent) {
+  mountChildren((vnode.children as any), container, parentComponent)
 }
 
 function processTextVNode(vnode: VNodeType, container: Element) {
@@ -44,15 +44,15 @@ function processTextVNode(vnode: VNodeType, container: Element) {
   container.append(textNode)
 }
 
-function processElement(vnode: VNodeType, container: Element) {
-  mountElement(vnode, container)
+function processElement(vnode: VNodeType, container: Element, parentComponent) {
+  mountElement(vnode, container, parentComponent)
 }
 
-function processComponent(vnode: VNodeType, container: Element) {
-  mountComponent(vnode, container)
+function processComponent(vnode: VNodeType, container: Element, parentComponent?: VNodeType) {
+  mountComponent(vnode, container, parentComponent)
 }
 
-function mountElement(vnode: VNodeType, container: Element) {
+function mountElement(vnode: VNodeType, container: Element, parentComponent?: VNodeType) {
   const { type, props, children, shapeFlags } = vnode
   const element: Element = document.createElement((<string>type))
   // 保存当前的el，后续this.$el调用
@@ -75,23 +75,23 @@ function mountElement(vnode: VNodeType, container: Element) {
   if (shapeFlags & ShapeFlags.TEXT_CHILDREN) {
     element.textContent = (children as string)
   } else if (shapeFlags & ShapeFlags.ARRAY_CHILDREN) {
-    mountChildren((children as Array<VNodeType>), element)
+    mountChildren((children as Array<VNodeType>), element, parentComponent)
   }
 
   container.appendChild(element)
 }
 
 
-function mountComponent(vnode: VNodeType, container: Element) {
-  const instance = createComponentInstance(vnode)
+function mountComponent(vnode: VNodeType, container: Element, parentComponent?: VNodeType) {
+  const instance = createComponentInstance(vnode, parentComponent)
 
   setupComponent(instance)
   setupRenderEffect(instance, vnode, container)
 }
 
-function mountChildren(children: VNodeType[], container: Element) {
+function mountChildren(children: VNodeType[], container: Element, parentComponent) {
   children.forEach(child => {
-    patch(child, container)
+    patch(child, container, parentComponent)
   })
 }
 
@@ -100,7 +100,7 @@ function setupRenderEffect(instance, vnode, container) {
   // 在App组件中，render函数会被调用,App的this指向实例
   const subTree = instance.render.call(proxy)
 
-  patch(subTree, container)
+  patch(subTree, container, instance)
   // 取出返回结果，将el赋值给vnode.el上
   vnode.el = subTree.el
   // 测试

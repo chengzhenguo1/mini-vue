@@ -23,21 +23,24 @@ function setupStatefulComponent(instance) {
     // 设置instance，调用setup的时候，可以获取当前组件实例
     setCurrentInstance(instance)
     const setupResult = setup(shallowReadonly(instance.vnode.props), { emit: instance.emit })
-
+    // 处理setup返回参数
     handelSetupResult(instance, setupResult)
-    
-    // 清空instance
+
+    // 执行完毕，清空instance
     setCurrentInstance(null)
   }
 }
 
-export function createComponentInstance(vnode): any {
+export function createComponentInstance(vnode, parent): any {
   const component = {
     vnode,
     type: vnode.type,
     setupState: {},
     props: {},
     slots: {},
+    //  引用类型provides不断向上指向父亲的provides
+    provides: parent ? parent.provides : {name: vnode.type},
+    parent,
     emit: () => { }
   }
 
