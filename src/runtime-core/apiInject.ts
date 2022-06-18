@@ -11,10 +11,10 @@ export const provide = (key: string, value) => {
 
     // init 只执行一次，后续因为当前的provides赋值过，所以与父级的provides不相等
     if (provides === parentProvides) {
-      // 修改原型链，使拥有自己的provides，同时通过原型链也指向父级的provides
+      // 因为provides是解构的，指向的是原来的地址，currentInstance.provides被指向了一块新内存，所以要重新赋值
+      // 修改原型链，使拥有自己的provides，将原型链也指向父级的provides
       provides = currentInstance.provides = Object.create(parentProvides)
     }
-
     provides[key] = value
   }
 }
