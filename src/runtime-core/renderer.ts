@@ -3,7 +3,7 @@ import { EMPTY_OBJ } from "../shared";
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component"
 import { createAppAPI } from "./createApp";
-import { Fragment } from "./vnode";
+import { Fragment, Text } from "./vnode";
 
 export interface VNodeType {
   type: string | Function
