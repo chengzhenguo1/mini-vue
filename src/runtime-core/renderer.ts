@@ -1,4 +1,5 @@
 import { effect } from "../reactivity/effect";
+import { EMPTY_OBJ } from "../shared";
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component"
 import { createAppAPI } from "./createApp";
@@ -14,7 +15,10 @@ export interface VNodeType {
 
 export function createRenderer(options: any) {
   // 获取options的参数，让外部可以自定义传递处理方法来达到自定义渲染器效果，利用闭包的特性，将参数保存在内部
-  const { createElement, patchProp, insert } = options
+  const {
+    createElement: hostCreateElement,
+    patchProp: hostPatchProp,
+    insert: hostInsert } = options
 
   function render(vnode: VNodeType, container: Element) {
     patch(null, vnode, container)
@@ -53,15 +57,47 @@ export function createRenderer(options: any) {
 
   function processElement(n1: null | VNodeType, n2: VNodeType, container: Element, parentComponent) {
     if (!n1) {
+      // init
       mountElement(n2, container, parentComponent)
     } else {
+      // update
       patchElement(n1, n2, container, parentComponent)
     }
   }
 
-  function patchElement(n1: null | VNodeType, n2: VNodeType, container: Element, parentComponent) {
+  function patchElement(n1: VNodeType, n2: VNodeType, container: Element, parentComponent) {
     console.log('n1', n1)
     console.log('n2', n2)
+    const oldProps = n1 ? n1.props : EMPTY_OBJ
+    const nextProps = n2 ? n2.props : EMPTY_OBJ
+    const el = (n2.el = n1.el)
+
+    patchProps(el, oldProps, nextProps)
+  }
+
+  // 更新props方法
+  function patchProps(el, oldProps, nextProps) {
+    if (oldProps !== nextProps) {
+      // 循环遍历props，更新属性
+      for (let key in nextProps) {
+        const prevProp = oldProps[key]
+        const nextProp = nextProps[key]
+
+        // 新旧节点值不一致，更新属性
+        if (prevProp !== nextProp) {
+          hostPatchProp(el, key, prevProp, nextProp)
+        }
+      }
+
+      // 循环遍历旧props，判断在新props里是否存在，不存在则删除
+      if (oldProps === EMPTY_OBJ) {
+        for (let key in oldProps) {
+          if (!(key in nextProps)) {
+            hostPatchProp(el, key, oldProps[key], null)
+          }
+        }
+      }
+    }
   }
 
   function processComponent(n1: null | VNodeType, n2: VNodeType, container: Element, parentComponent?: VNodeType) {
@@ -70,14 +106,14 @@ export function createRenderer(options: any) {
 
   function mountElement(vnode: VNodeType, container: Element, parentComponent?: VNodeType) {
     const { type, props, children, shapeFlags } = vnode
-    const element: Element = createElement((<string>type))
+    const element: Element = hostCreateElement((<string>type))
     // 保存当前的el，后续this.$el调用
     vnode.el = element
 
     for (let key in props) {
       const value = props[key]
 
-      patchProp(element, key, value)
+      hostPatchProp(element, key, null, value)
     }
 
     if (shapeFlags & ShapeFlags.TEXT_CHILDREN) {
@@ -86,7 +122,7 @@ export function createRenderer(options: any) {
       mountChildren((children as Array<VNodeType>), element, parentComponent)
     }
 
-    insert(element, container)
+    hostInsert(element, container)
   }
 
 
@@ -105,7 +141,7 @@ export function createRenderer(options: any) {
 
   function setupRenderEffect(instance, vnode, container) {
     // proxy是setup的值
-    // 使用effect追踪render里调用ref等响应式参数，发生改变后重新触发
+    // 使用effect追踪render里调用ref等响应式参数，改变后触发更新逻辑
     effect(() => {
       const { proxy, isMounted, subTree: prevSubTree } = instance
       // init

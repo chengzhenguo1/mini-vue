@@ -4,15 +4,20 @@ function createElement(type: string) {
   return document.createElement((<string>type))
 }
 
-function patchProp(el, key, value) {
+function patchProp(el: Element, key, prevVal, nextVal) {
   const isEvent = key => /^on[A-Z]/.test(key)
 
   if (isEvent(key)) {
     // 添加事件监听
     const event = key.slice(2).toLocaleLowerCase()
-    el.addEventListener(event, value)
+    el.addEventListener(event, nextVal)
   } else {
-    el.setAttribute(key, value)
+    // nextVal 为空，则删除属性
+    if (nextVal === undefined || nextVal === null) {
+      el.removeAttribute(key)
+    } else {
+      el.setAttribute(key, nextVal)
+    }
   }
 }
 

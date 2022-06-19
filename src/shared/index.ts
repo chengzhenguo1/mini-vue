@@ -1,3 +1,4 @@
+export const EMPTY_OBJ = {}
 // 继承函数
 export const extend = Object.assign
 

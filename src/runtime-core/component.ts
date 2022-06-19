@@ -55,7 +55,7 @@ export function createComponentInstance(vnode, parent): any {
 
 function handelSetupResult(instance, setupResult) {
   if (isObject(setupResult)) {
-    // 保存数据
+    // 保存数据，使用proxyRefs来解构ref对象，不用加.value即可访问
     instance.setupState = proxyRefs(setupResult)
   }
 
