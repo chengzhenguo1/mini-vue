@@ -18,7 +18,10 @@ export function createRenderer(options: any) {
   const {
     createElement: hostCreateElement,
     patchProp: hostPatchProp,
-    insert: hostInsert } = options
+    insert: hostInsert,
+    remove: hostRemove,
+    setElementText: hostSetElementText,
+  } = options
 
   function render(vnode: VNodeType, container: Element) {
     patch(null, vnode, container)
@@ -72,10 +75,11 @@ export function createRenderer(options: any) {
     const nextProps = n2 ? n2.props : EMPTY_OBJ
     const el = (n2.el = n1.el)
 
+    patchChildren(n1, n2, el, parentComponent)
     patchProps(el, oldProps, nextProps)
   }
 
-  // 更新props方法
+  // 更新元素props
   function patchProps(el, oldProps, nextProps) {
     if (oldProps !== nextProps) {
       // 循环遍历props，更新属性
@@ -96,6 +100,33 @@ export function createRenderer(options: any) {
             hostPatchProp(el, key, oldProps[key], null)
           }
         }
+      }
+    }
+  }
+
+  // 更新元素子节点
+  function patchChildren(n1, n2, container, parentComponent) {
+    const prevShapeFlags = n1.shapeFlags
+    const nextShapeFlags = n2.shapeFlags
+    const c1 = n1.children
+    const c2 = n2.children
+    // 新节点的子元素为文本
+    if (nextShapeFlags & ShapeFlags.TEXT_CHILDREN) {
+      // 旧节点子元素为数组，则移除数组，同时在下面对比c1,c2
+      if (prevShapeFlags & ShapeFlags.ARRAY_CHILDREN) {
+        unmountChildren(n1.children)
+      }
+      // 新旧节点文本不同，替换文本
+      if (c1 !== c2) {
+        hostSetElementText(container, c2)
+      }
+    } else {
+      // 新节点子元素为数组，旧节点子元素为文本，则清空旧文本，挂载子元素
+      if (prevShapeFlags & ShapeFlags.TEXT_CHILDREN) {
+        // 清空旧文本
+        hostSetElementText(container, '')
+        // 挂载子元素到节点上
+        mountChildren(c2, container, parentComponent)
       }
     }
   }
@@ -139,11 +170,18 @@ export function createRenderer(options: any) {
     })
   }
 
+  function unmountChildren(children) {
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i].el;
+      hostRemove(child);
+    }
+  }
+
   function setupRenderEffect(instance, vnode, container) {
     // proxy是setup的值
     // 使用effect追踪render里调用ref等响应式参数，改变后触发更新逻辑
     effect(() => {
-      const { proxy, isMounted, subTree: prevSubTree } = instance
+      const { proxy, isMounted } = instance
       // init
       if (!isMounted) {
         // 在App组件中，render函数会被调用,App的this指向实例
@@ -156,6 +194,8 @@ export function createRenderer(options: any) {
         instance.isMounted = true
       } else {
         // update 重新调用render函数
+        const { subTree: prevSubTree } = instance
+
         const subTree = instance.render.call(proxy)
 
         patch(prevSubTree, subTree, container, instance)
