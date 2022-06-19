@@ -1,4 +1,5 @@
 import { shallowReadonly } from "../reactivity/reactive";
+import { proxyRefs } from "../reactivity/ref";
 import { isObject } from "../shared";
 import { emit } from "./componentEmit";
 import { initProps } from "./componentProps";
@@ -41,6 +42,9 @@ export function createComponentInstance(vnode, parent): any {
     //  引用类型provides不断向上指向父亲的provides
     provides: parent ? parent.provides : {name: vnode.type},
     parent,
+    // 是否已挂载
+    isMounted: false,
+    subTree: null,
     emit: () => { }
   }
 
@@ -52,7 +56,7 @@ export function createComponentInstance(vnode, parent): any {
 function handelSetupResult(instance, setupResult) {
   if (isObject(setupResult)) {
     // 保存数据
-    instance.setupState = setupResult
+    instance.setupState = proxyRefs(setupResult)
   }
 
   finishComponentSetup(instance)

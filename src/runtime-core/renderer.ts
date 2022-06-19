@@ -1,3 +1,4 @@
+import { effect } from "../reactivity/effect";
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component"
 import { createAppAPI } from "./createApp";
@@ -16,46 +17,55 @@ export function createRenderer(options: any) {
   const { createElement, patchProp, insert } = options
 
   function render(vnode: VNodeType, container: Element) {
-    patch(vnode, container)
+    patch(null, vnode, container)
   }
 
-  function patch(vnode: VNodeType, container: Element, parentComponent?: VNodeType) {
-    const { shapeFlags, type } = vnode
+  function patch(n1: null | VNodeType, n2: VNodeType, container: Element, parentComponent?: VNodeType) {
+    const { shapeFlags, type } = n2
 
     switch (type) {
       case (Fragment as any):
-        processFragment(vnode, container, parentComponent)
+        processFragment(n1, n2, container, parentComponent)
         break;
       case (Text as any):
-        processTextVNode(vnode, container)
+        processTextVNode(n1, n2, container)
         break;
       default:
         if (shapeFlags & ShapeFlags.ELEMENT) {
           // element类型
-          processElement(vnode, container, parentComponent)
+          processElement(n1, n2, container, parentComponent)
         } else if (shapeFlags & ShapeFlags.COMPONENT_STATEFUL) {
-          processComponent(vnode, container, parentComponent)
+          processComponent(n1, n2, container, parentComponent)
         }
         break;
     }
   }
 
-  function processFragment(vnode: VNodeType, container: Element, parentComponent) {
-    mountChildren((vnode.children as any), container, parentComponent)
+  function processFragment(n1: null | VNodeType, n2: VNodeType, container: Element, parentComponent) {
+    mountChildren((n2.children as any), container, parentComponent)
   }
 
-  function processTextVNode(vnode: VNodeType, container: Element) {
-    const { children } = vnode
+  function processTextVNode(n1: null | VNodeType, n2: VNodeType, container: Element) {
+    const { children } = n2
     const textNode = document.createTextNode((children as string))
     container.append(textNode)
   }
 
-  function processElement(vnode: VNodeType, container: Element, parentComponent) {
-    mountElement(vnode, container, parentComponent)
+  function processElement(n1: null | VNodeType, n2: VNodeType, container: Element, parentComponent) {
+    if (!n1) {
+      mountElement(n2, container, parentComponent)
+    } else {
+      patchElement(n1, n2, container, parentComponent)
+    }
   }
 
-  function processComponent(vnode: VNodeType, container: Element, parentComponent?: VNodeType) {
-    mountComponent(vnode, container, parentComponent)
+  function patchElement(n1: null | VNodeType, n2: VNodeType, container: Element, parentComponent) {
+    console.log('n1', n1)
+    console.log('n2', n2)
+  }
+
+  function processComponent(n1: null | VNodeType, n2: VNodeType, container: Element, parentComponent?: VNodeType) {
+    mountComponent(n2, container, parentComponent)
   }
 
   function mountElement(vnode: VNodeType, container: Element, parentComponent?: VNodeType) {
@@ -89,21 +99,39 @@ export function createRenderer(options: any) {
 
   function mountChildren(children: VNodeType[], container: Element, parentComponent) {
     children.forEach(child => {
-      patch(child, container, parentComponent)
+      patch(null, child, container, parentComponent)
     })
   }
 
   function setupRenderEffect(instance, vnode, container) {
-    const { proxy } = instance
-    // 在App组件中，render函数会被调用,App的this指向实例
-    const subTree = instance.render.call(proxy)
+    // proxy是setup的值
+    // 使用effect追踪render里调用ref等响应式参数，发生改变后重新触发
+    effect(() => {
+      const { proxy, isMounted, subTree: prevSubTree } = instance
+      // init
+      if (!isMounted) {
+        // 在App组件中，render函数会被调用,App的this指向实例
+        const subTree = (instance.subTree = instance.render.call(proxy))
 
-    patch(subTree, container, instance)
-    // 取出返回结果，将el赋值给vnode.el上
-    vnode.el = subTree.el
-    // 测试
+        patch(null, subTree, container, instance)
+
+        // 取出返回结果，将el赋值给vnode.el上
+        vnode.el = subTree.el
+        instance.isMounted = true
+      } else {
+        // update 重新调用render函数
+        const subTree = instance.render.call(proxy)
+
+        patch(prevSubTree, subTree, container, instance)
+
+        // 取出返回结果，将el赋值给vnode.el上
+        vnode.el = subTree.el
+        instance.subTree = subTree
+      }
+    })
   }
 
+  // 将createApp导出
   return {
     createApp: createAppAPI(render)
   }
