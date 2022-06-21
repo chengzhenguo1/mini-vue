@@ -21,8 +21,9 @@ function patchProp(el: Element, key, prevVal, nextVal) {
   }
 }
 
-function insert(el, container) {
-  container.appendChild(el)
+function insert(el, container: Element, anchor: Element | null) {
+  // 插入到指定位置，null或undefined则插入到最后
+  container.insertBefore(el, anchor || null)
 }
 
 function remove(child) {
