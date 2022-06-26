@@ -2,6 +2,7 @@ import { effect } from "../reactivity/effect";
 import { EMPTY_OBJ } from "../shared";
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component"
+import { shouldUpdateComponent } from "./componentUpdateUtils";
 import { createAppAPI } from "./createApp";
 import { Fragment, Text } from "./vnode";
 
@@ -11,6 +12,7 @@ export interface VNodeType {
   props: Object
   shapeFlags: ShapeFlags
   children: Array<VNodeType> | string
+  component: any
 }
 
 export function createRenderer(options: any) {
@@ -173,12 +175,12 @@ export function createRenderer(options: any) {
 
     // 说明先遍历完旧元素，新的比老的长，创建新元素插入 e1老元素的尾部
     if (i > e1) {
-      // a b 
-      // a b c
+      // a b d
+      // a b c d
       // 当前新节点还没有到尾，则继续挂载
       if (i <= e2) {
         const nextPos = e2 + 1
-        // 锚点，获取要插入的位置
+        // 获取要插入的位置,如果到结尾就设置null
         const anchor = nextPos < l2 ? c2[nextPos].el : null
         while (i <= e2) {
           patch(null, c2[i], container, parentComponent, anchor)
@@ -194,15 +196,18 @@ export function createRenderer(options: any) {
         i++
       }
     } else {
-      // 中间有剩余节点
+      // 中间都有剩余节点
       let s1 = i
       let s2 = i
-      // 新节点要对比的节点数量
+      // 新列表中剩余的节点长度
       let toBePatched = e2 - s2 + 1
       let patched = 0
+      // 新列表节点与index的映射
       let keyToNewIndexMap = new Map()
+      // 根据新列表剩余的节点数量，创建一个数组, 填充为0
       const newIndexToOldIndexMap = new Array(toBePatched);
       let moved = false;
+      // 记录上一次的位置
       let maxNewIndexSoFar = 0;
 
       // 全部设置为0
@@ -225,7 +230,7 @@ export function createRenderer(options: any) {
         }
         // 新节点的指针
         let findIndex: number | null = null
-        
+
         if (preChild.key != null) {
           // 从新节点map中查找
           findIndex = keyToNewIndexMap.get(preChild.key);
@@ -245,6 +250,7 @@ export function createRenderer(options: any) {
           if (findIndex >= maxNewIndexSoFar) {
             maxNewIndexSoFar = findIndex;
           } else {
+            // 说明需要移动
             moved = true;
           }
           // 记录新节点的位置
@@ -257,16 +263,19 @@ export function createRenderer(options: any) {
           hostRemove(preChild.el)
         }
       }
+      // 获取最长递增子序列，返回的是索引
       const increasingNewIndexSequence = moved
         ? getSequence(newIndexToOldIndexMap)
         : [];
 
       let j = increasingNewIndexSequence.length - 1;
+      // 从后向前进行遍历中间的每一项
       for (let i = toBePatched - 1; i >= 0; i--) {
         const nextIndex = i + s2;
         const nextChild = c2[nextIndex];
         const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1].el : null;
 
+        // 全新的节点，直接插入
         if (newIndexToOldIndexMap[i] === 0) {
           patch(null, nextChild, container, parentComponent, anchor);
         } else if (moved) {
@@ -282,7 +291,22 @@ export function createRenderer(options: any) {
   }
 
   function processComponent(n1: null | VNodeType, n2: VNodeType, container: Element, parentComponent: VNodeType | null, anchor) {
-    mountComponent(n2, container, parentComponent, anchor)
+    if (!n1) {
+      mountComponent(n2, container, parentComponent, anchor)
+    } else {
+      updateComponent(n1, n2)
+    }
+  }
+
+  function updateComponent(n1, n2) {
+    const instance = (n2.component = n1.component);
+    if (shouldUpdateComponent(n1, n2)) {
+      instance.next = n2;
+      instance.update();
+    } else {
+      n2.el = n1.el;
+      n2.vnode = n2;
+    }
   }
 
   function mountElement(vnode: VNodeType, container: Element, parentComponent: VNodeType | null, anchor) {
@@ -307,11 +331,14 @@ export function createRenderer(options: any) {
   }
 
 
-  function mountComponent(vnode: VNodeType, container: Element, parentComponent: VNodeType | null, anchor) {
-    const instance = createComponentInstance(vnode, parentComponent)
+  function mountComponent(initialVNode: VNodeType, container: Element, parentComponent: VNodeType | null, anchor) {
+    const instance = (initialVNode.component = createComponentInstance(
+      initialVNode,
+      parentComponent
+    ));
 
     setupComponent(instance)
-    setupRenderEffect(instance, vnode, container)
+    setupRenderEffect(instance, initialVNode, container)
   }
 
   function mountChildren(children: VNodeType[], container: Element, parentComponent, anchor) {
@@ -328,11 +355,10 @@ export function createRenderer(options: any) {
   }
 
   function setupRenderEffect(instance, vnode, container) {
-    // proxy是setup的值
-    // 使用effect追踪render里调用ref等响应式参数，改变后触发更新逻辑
-    effect(() => {
+    // 将effect保存  使用effect追踪render里调用ref等响应式参数，改变后触发render
+    instance.update = effect(() => {
       const { proxy, isMounted } = instance
-      // init
+      // init proxy是setup的值
       if (!isMounted) {
         // 在App组件中，render函数会被调用,App的this指向实例
         const subTree = (instance.subTree = instance.render.call(proxy))
@@ -344,7 +370,12 @@ export function createRenderer(options: any) {
         instance.isMounted = true
       } else {
         // update 重新调用render函数
-        const { subTree: prevSubTree } = instance
+        const { subTree: prevSubTree, next, vnode } = instance
+        
+        if (next) {
+          next.el = vnode.el;
+          updateComponentPreRender(instance, next);
+        }
 
         const subTree = instance.render.call(proxy)
 
@@ -361,6 +392,13 @@ export function createRenderer(options: any) {
   return {
     createApp: createAppAPI(render)
   }
+}
+
+function updateComponentPreRender(instance, nextVNode) {
+  instance.vnode = nextVNode;
+  instance.next = null;
+
+  instance.props = nextVNode.props;
 }
 
 // 最长递增子序列
@@ -404,3 +442,5 @@ function getSequence(arr) {
   }
   return result;
 }
+
+

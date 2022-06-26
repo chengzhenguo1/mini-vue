@@ -39,15 +39,12 @@ export class ReactiveEffect {
       this.onStop && this.onStop()
     }
   }
-
-
 }
 
 function cleanupEffect(effect) {
   effect.deps.forEach((dep: any) => {
     dep.delete(effect)
   });
-
   // 把 effect.deps 清空
   effect.deps.length = 0
 }
@@ -57,6 +54,7 @@ function cleanupEffect(effect) {
 // 收集依赖
 const targetMap = new Map()
 export function track(target, key) {
+  // 防止二次收集effect
   if (!isTracking()) return
 
   let depsMap = targetMap.get(target)
@@ -90,6 +88,7 @@ function trackEffects(dep) {
   activeEffect.deps.push(dep)
 }
 
+// 是否正在effect中
 export function isTracking() {
   return shouldTrack && activeEffect !== undefined;
 }
@@ -117,6 +116,7 @@ export function effect(fn, options: any = {}) {
 
   extend(_effect, options)
 
+  // 执行effect函数
   _effect.run()
 
   // 处理指针指向
