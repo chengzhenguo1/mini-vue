@@ -4,6 +4,7 @@ import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component"
 import { shouldUpdateComponent } from "./componentUpdateUtils";
 import { createAppAPI } from "./createApp";
+import { queueJobs } from "./scheduler";
 import { Fragment, Text } from "./vnode";
 
 export interface VNodeType {
@@ -371,7 +372,7 @@ export function createRenderer(options: any) {
       } else {
         // update 重新调用render函数
         const { subTree: prevSubTree, next, vnode } = instance
-        
+
         if (next) {
           next.el = vnode.el;
           updateComponentPreRender(instance, next);
@@ -384,6 +385,11 @@ export function createRenderer(options: any) {
         // 取出返回结果，将el赋值给vnode.el上
         vnode.el = subTree.el
         instance.subTree = subTree
+      }
+    }, {
+      scheduler() {
+        // 将更新任务添加到任务队列中，使同步变为异步
+        queueJobs(instance.update)
       }
     })
   }
