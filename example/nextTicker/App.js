@@ -23,6 +23,7 @@ export default {
       });
 
       console.log(nextTick)
+      // TODO fix await执行语法错误问题
       // await nextTick()
       // console.log(instance)
     }
