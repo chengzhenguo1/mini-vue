@@ -7,6 +7,7 @@ const enum TagType {
 
 export function baseParse(content: string) {
   const context = createParserContext(content);
+  
   return createRoot(parseChildren(context, []));
 }
 
