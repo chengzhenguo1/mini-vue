@@ -22,11 +22,11 @@ export class ReactiveEffect {
     if (!this.active) {
       return this._fn()
     }
-
+    // 记录当前正在执行的effect
     activeEffect = this
     shouldTrack = true
     const result = this._fn()
-    // reset
+    // reset 将执行effect标志变为false 说明没有正在执行的effect
     shouldTrack = false
 
     return result
@@ -60,9 +60,11 @@ export function track(target, key) {
   let depsMap = targetMap.get(target)
   if (!depsMap) {
     depsMap = new Map()
+    // key是他这个对象
     targetMap.set(target, depsMap)
   }
 
+  // target.key中添加里面的Effect
   let dep = depsMap.get(key)
   if (!dep) {
     dep = new Set()
@@ -74,6 +76,7 @@ export function track(target, key) {
 
 export function trackRefValue(ref) {
   if (isTracking()) {
+    // 保存effect
     trackEffects(ref.dep);
   }
 }
@@ -88,7 +91,7 @@ function trackEffects(dep) {
   activeEffect.deps.push(dep)
 }
 
-// 是否正在effect中
+// ref是否正在effect中
 export function isTracking() {
   return shouldTrack && activeEffect !== undefined;
 }
@@ -101,6 +104,7 @@ export function trigger(target, key) {
   triggerEffects(dep)
 }
 
+// 执行ref保存的effects
 export function triggerEffects(dep) {
   for (let effect of dep) {
     if (effect.scheduler) {

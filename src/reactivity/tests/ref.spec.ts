@@ -18,10 +18,11 @@ describe("ref", () => {
     });
     expect(calls).toBe(1);
     expect(dummy).toBe(1);
+    // 变化了触发trigger方法，将会执行deps保存的effects
     a.value = 2;
     expect(calls).toBe(2);
     expect(dummy).toBe(2);
-    // same value should not trigger
+    // 没有变化，不会触发trigger方法
     a.value = 2;
     expect(calls).toBe(2);
     expect(dummy).toBe(2);
@@ -36,6 +37,7 @@ describe("ref", () => {
       dummy = a.value.count;
     });
     expect(dummy).toBe(1);
+    // 会触发ref的get方法, count的set方法，也就是执行count保存的effect
     a.value.count = 2;
     expect(dummy).toBe(2);
   });

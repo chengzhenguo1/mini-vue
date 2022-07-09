@@ -8,6 +8,7 @@ class RefImpl {
   private rawValue: any
   // ref对象的标识符
   public __v_isRef = true
+  // 保存Effect
   public dep: Set<any>
 
   constructor(value) {
@@ -24,6 +25,7 @@ class RefImpl {
   }
 
   set value(newValue: any) {
+    // 和普通属性对比是否改变，改变就触发effect
     if (hasChanged(this.rawValue, newValue)) {
       this._value = convert(newValue)
       this.rawValue = newValue
@@ -38,6 +40,7 @@ export function convert(value) {
 }
 
 export function ref(value) {
+  debugger
   return new RefImpl(value)
 }
 
@@ -51,15 +54,20 @@ export function unRef(ref) {
   return isRef(ref) ? ref.value : ref
 }
 
+// 返回直接访问的对象，不用.value
 export function proxyRefs(withProxyRefs) {
+  // 返回新的代理对象
   return new Proxy(withProxyRefs, {
     get(target, key) {
+      // 直接返回解析后的值
       return unRef(Reflect.get(target, key))
     },
     set(target, key, value) {
+      // 如果当前要赋值的属性是ref类型，并且value是普通值，就直接赋值给ref的.value上
       if (isRef(target[key]) && !isRef(value)) {
         return (target[key].value = value)
       } else {
+        // 否则直接赋值即可
         return Reflect.set(target, key, value)
       }
     }
