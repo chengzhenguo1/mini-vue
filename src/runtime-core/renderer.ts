@@ -361,8 +361,8 @@ export function createRenderer(options: any) {
       const { proxy, isMounted } = instance
       // init proxy是setup的值
       if (!isMounted) {
-        // 在App组件中，render函数会被调用,App的this指向实例
-        const subTree = (instance.subTree = instance.render.call(proxy))
+        // 在App组件中，render函数会被调用,App的this指向实例 第二个proxy是为了调用render函数的时候传参
+        const subTree = (instance.subTree = instance.render.call(proxy, proxy))
 
         patch(null, subTree, container, instance, null)
 
@@ -378,7 +378,7 @@ export function createRenderer(options: any) {
           updateComponentPreRender(instance, next);
         }
 
-        const subTree = instance.render.call(proxy)
+        const subTree = instance.render.call(proxy, proxy)
 
         patch(prevSubTree, subTree, container, instance, null)
 

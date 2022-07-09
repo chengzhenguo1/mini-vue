@@ -11,9 +11,10 @@ describe("transform", () => {
         node.content = node.content + " mini-vue";
       }
     };
+
     transform(ast, {
-      nodeTransforms: [plugin]
-    })
+      nodeTransforms: [plugin],
+    });
 
     const nodeText = ast.children[0].children[0];
     expect(nodeText.content).toBe("hi, mini-vue");

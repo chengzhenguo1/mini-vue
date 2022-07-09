@@ -20,6 +20,8 @@ function setupStatefulComponent(instance) {
 
   const { setup } = Component;
 
+  instance.proxy = new Proxy({ _: instance }, PublicInstanceProxyHandler)
+
   if (setup) {
     // 设置instance，调用setup的时候，可以获取当前组件实例
     setCurrentInstance(instance)
@@ -65,9 +67,15 @@ function handelSetupResult(instance, setupResult) {
 
 function finishComponentSetup(instance: any) {
   const Component = instance.type
-  instance.render = Component.render
 
-  instance.proxy = new Proxy({ _: instance }, PublicInstanceProxyHandler)
+  // render的优先级大于template
+  if (compiler && !Component.render) {
+    if (Component.template) {
+      Component.render = compiler(Component.template);
+    }
+  }
+
+  instance.render = Component.render
 }
 
 let currentInstance: VNodeType | null = null
@@ -80,4 +88,10 @@ export const getCurrentInstance = () => {
 // 设置当前组件实例
 const setCurrentInstance = (instance: VNodeType | null) => {
   currentInstance = instance
+}
+
+let compiler;
+
+export function registerRuntimeCompiler(_compiler) {
+  compiler = _compiler;
 }
