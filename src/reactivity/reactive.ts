@@ -30,6 +30,7 @@ export function isReactive(value) {
 }
 
 export function isProxy(value) {
+  // 是reactive或者readonly
   return isReactive(value) || isReadonly(value)
 }
 

@@ -7,6 +7,7 @@ describe('computed', () => {
       age: 10
     })
 
+    // 原理就是创建了个effect，获取的时候调用effect.run()
     const getter = computed(() => {
       return user.age
     })
