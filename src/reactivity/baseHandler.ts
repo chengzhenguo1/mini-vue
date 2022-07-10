@@ -27,7 +27,9 @@ export const shallowHandlers = extend({}, readonlyHandlers, {
 
 function createGetter(isReadonly = false, shallow = false) {
   return function get(target, key) {
-    // 判断key是否是isReadonly函数调用的
+    // 判断key是否是isReadonly函数调用的,
+    // 创建readonly的时候会将isReadonly置为true，所以在key = 的时候，取反就是false,
+    // 说明当前不是reactive对象
     if (key === ReactiveFlags.IS_REACTIVE) {
       return !isReadonly
     } else if (key === ReactiveFlags.IS_READONLY) {

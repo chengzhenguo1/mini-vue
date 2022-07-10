@@ -1,20 +1,19 @@
-import { isReactive, isReadonly, reactive } from '../reactive'
+import { isProxy, isReactive, isReadonly, reactive } from '../reactive'
 
 describe('reactive', () => {
   it('happy path', () => {
-    const user = {
-      name: 'zs'
-    }
+    const original = { foo: 1 };
+    const observed = reactive(original);
+    
+    expect(observed).not.toBe(original);
 
-    const obj = reactive(user)
+    expect(observed.foo).toBe(1);
 
-    expect(obj.name).toBe('zs')
+    expect(isReactive(observed)).toBe(true);
 
-    // 响应式包裹的对象不等于原始对象
-    expect(obj).not.toBe(user)
+    expect(isReactive(original)).toBe(false);
 
-    expect(isReactive(obj)).toBe(true)
-    expect(isReadonly(obj)).toBe(false)
+    expect(isProxy(observed)).toBe(true);
   })
 
   test("nested reactives", () => {
