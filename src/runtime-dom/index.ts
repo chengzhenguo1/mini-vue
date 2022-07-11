@@ -46,6 +46,7 @@ export const renderer: any = createRenderer({
 })
 
 export function createApp(...args) {
+  debugger
   return renderer.createApp(...args)
 }
 

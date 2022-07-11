@@ -9,6 +9,7 @@ export {
 }
 
 export function createVNode(type, props?, children?) {
+  debugger
   const vnode = {
     type,
     props,
@@ -25,6 +26,7 @@ export function createTextVNode(text: string) {
   return createVNode(Text, {}, text);
 }
 
+// 设置当前VNode类型
 function getShapeFlags(type: any, children: any) {
   let flags = 0
   if (isString(type)) {

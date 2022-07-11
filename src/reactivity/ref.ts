@@ -40,7 +40,6 @@ export function convert(value) {
 }
 
 export function ref(value) {
-  debugger
   return new RefImpl(value)
 }
 

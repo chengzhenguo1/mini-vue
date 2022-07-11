@@ -1,6 +1,7 @@
 import { h } from '../../lib/mini-vue.esm.js'
 import { Foo } from './foo.js'
 
+console.log('app')
 export const App = {
   render() {
     console.log(this.msg)

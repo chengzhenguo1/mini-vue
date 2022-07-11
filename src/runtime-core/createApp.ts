@@ -1,7 +1,9 @@
 import { createVNode } from "./vnode";
 
 export function createAppAPI(render) {
+  // 利用闭包保存render
   return function createApp(rootComponent) {
+    debugger
     return {
       mount(rootContainer: string | Element) {
         if (typeof rootContainer === "string") {

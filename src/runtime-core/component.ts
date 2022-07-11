@@ -15,6 +15,7 @@ export function setupComponent(instance) {
   setupStatefulComponent(instance)
 }
 
+// 执行组件中setup
 function setupStatefulComponent(instance) {
   const Component = instance.type
 
@@ -25,8 +26,9 @@ function setupStatefulComponent(instance) {
   if (setup) {
     // 设置instance，调用setup的时候，可以获取当前组件实例
     setCurrentInstance(instance)
+    // 给setup传递Props变为只读，传递emit
     const setupResult = setup(shallowReadonly(instance.vnode.props), { emit: instance.emit })
-    // 处理setup返回参数
+    // 处理Setup返回参数，保存到setupState属性上
     handelSetupResult(instance, setupResult)
 
     // 执行完毕，清空instance
@@ -34,6 +36,7 @@ function setupStatefulComponent(instance) {
   }
 }
 
+// 创建组件实例
 export function createComponentInstance(vnode, parent): any {
   const component = {
     vnode,
@@ -56,6 +59,7 @@ export function createComponentInstance(vnode, parent): any {
   return component
 }
 
+// 处理Setup返回参数，保存到setupState属性上
 function handelSetupResult(instance, setupResult) {
   if (isObject(setupResult)) {
     // 保存数据，使用proxyRefs来解构ref对象，不用加.value即可访问

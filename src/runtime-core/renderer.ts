@@ -26,6 +26,7 @@ export function createRenderer(options: any) {
     setElementText: hostSetElementText,
   } = options
 
+  // 第一次渲染
   function render(vnode: VNodeType, container: Element) {
     patch(null, vnode, container, null, null)
   }
@@ -45,6 +46,7 @@ export function createRenderer(options: any) {
           // element类型
           processElement(n1, n2, container, parentComponent, anchor)
         } else if (shapeFlags & ShapeFlags.COMPONENT_STATEFUL) {
+          // component类型
           processComponent(n1, n2, container, parentComponent, anchor)
         }
         break;
@@ -78,6 +80,16 @@ export function createRenderer(options: any) {
 
     patchChildren(n1, n2, el, parentComponent, anchor)
     patchProps(el, oldProps, nextProps)
+  }
+
+  function processComponent(n1: null | VNodeType, n2: VNodeType, container: Element, parentComponent: VNodeType | null, anchor) {
+    if (!n1) {
+      // init
+      mountComponent(n2, container, parentComponent, anchor)
+    } else {
+      // update
+      updateComponent(n1, n2)
+    }
   }
 
   // 更新元素props
@@ -291,13 +303,6 @@ export function createRenderer(options: any) {
 
   }
 
-  function processComponent(n1: null | VNodeType, n2: VNodeType, container: Element, parentComponent: VNodeType | null, anchor) {
-    if (!n1) {
-      mountComponent(n2, container, parentComponent, anchor)
-    } else {
-      updateComponent(n1, n2)
-    }
-  }
 
   function updateComponent(n1, n2) {
     const instance = (n2.component = n1.component);
@@ -337,7 +342,7 @@ export function createRenderer(options: any) {
       initialVNode,
       parentComponent
     ));
-
+    // 处理props和slots，运行setup
     setupComponent(instance)
     setupRenderEffect(instance, initialVNode, container)
   }
@@ -394,7 +399,7 @@ export function createRenderer(options: any) {
     })
   }
 
-  // 将createApp导出
+  // 将createApp导出,内部利用闭包，保存了render
   return {
     createApp: createAppAPI(render)
   }

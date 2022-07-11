@@ -19,13 +19,14 @@ export class ReactiveEffect {
   }
 
   run() {
+    // 停止收集依赖，直接执行
     if (!this.active) {
       return this._fn()
     }
     // 记录当前正在执行的effect
     activeEffect = this
     shouldTrack = true
-    // 执行的时候，如果fn内部有reactive或ref就会把当前effect收集起来，在数据改变的时候重新触发
+    // 执行的时候，如果fn内部有reactive或ref就会把当前effect收集起来，在数据改变的时候重新触发run方法
     const result = this._fn()
     // reset 将执行effect标志变为false 说明没有正在执行的effect
     shouldTrack = false
@@ -129,7 +130,7 @@ export function effect(fn, options: any = {}) {
 
   // 处理指针指向，让run方法内的this指向当前effect，返回run方法
   const runner: any = _effect.run.bind(_effect)
-  // 保存当前effect
+  // 保存当前effect，后续调用stop
   runner.effect = _effect
 
   return runner
