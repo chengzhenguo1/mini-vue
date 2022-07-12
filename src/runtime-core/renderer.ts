@@ -344,6 +344,7 @@ export function createRenderer(options: any) {
     ));
     // 处理props和slots，运行setup
     setupComponent(instance)
+    // 执行render，进行挂载
     setupRenderEffect(instance, initialVNode, container)
   }
 
@@ -361,12 +362,13 @@ export function createRenderer(options: any) {
   }
 
   function setupRenderEffect(instance, vnode, container) {
-    // 将effect保存  使用effect追踪render里调用ref等响应式参数，改变后触发render
+    // 将effect保存  使用effect追踪render里调用ref等响应式参数，等响应式参数改变后重新触发render
     instance.update = effect(() => {
+      // 解构proxy，更好访问setup返回值和props
       const { proxy, isMounted } = instance
-      // init proxy是setup的值
+      // init
       if (!isMounted) {
-        // 在App组件中，render函数会被调用,App的this指向实例 第二个proxy是为了调用render函数的时候传参
+        // 调用render,传递proxy,使用this.xxx即可访问props和setup的值
         const subTree = (instance.subTree = instance.render.call(proxy, proxy))
 
         patch(null, subTree, container, instance, null)

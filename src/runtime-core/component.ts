@@ -11,7 +11,7 @@ export function setupComponent(instance) {
   // 处理props和slots
   initProps(instance, instance.vnode.props)
   initSlots(instance, instance.vnode.children)
-
+  // 处理Setup
   setupStatefulComponent(instance)
 }
 
@@ -21,12 +21,13 @@ function setupStatefulComponent(instance) {
 
   const { setup } = Component;
 
+  // 挂载到proxy上，更方便访问Props和setup返回的参数
   instance.proxy = new Proxy({ _: instance }, PublicInstanceProxyHandler)
 
   if (setup) {
     // 设置instance，调用setup的时候，可以获取当前组件实例
     setCurrentInstance(instance)
-    // 给setup传递Props变为只读，传递emit
+    // 执行setup，传递Props变为只读，传递emit
     const setupResult = setup(shallowReadonly(instance.vnode.props), { emit: instance.emit })
     // 处理Setup返回参数，保存到setupState属性上
     handelSetupResult(instance, setupResult)
@@ -53,7 +54,9 @@ export function createComponentInstance(vnode, parent): any {
     subTree: null,
     emit: () => { }
   }
+  
 
+  // 利用bind将component传递进去
   component.emit = emit.bind(null, component) as any
 
   return component

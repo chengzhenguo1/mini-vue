@@ -6,7 +6,6 @@ export const App = {
   render() {
     console.log(this.msg)
     console.log('-----------')
-    console.log(App)
 
 
     setTimeout(() => {

@@ -10,9 +10,11 @@ export const PublicInstanceProxyHandler = {
   get({ _: instance }, key) {
     const { setupState, props } = instance
 
+    // setup上的参数
     if (hasOwn(setupState, key)) {
       return setupState[key]
     } else if (hasOwn(props, key)) {
+      // props的参数
       return props[key]
     }
 
