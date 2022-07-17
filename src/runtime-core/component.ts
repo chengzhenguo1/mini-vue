@@ -28,7 +28,7 @@ function setupStatefulComponent(instance) {
     // 设置instance，调用setup的时候，可以获取当前组件实例
     setCurrentInstance(instance)
     // 执行setup，传递Props变为只读，传递emit
-    const setupResult = setup(shallowReadonly(instance.vnode.props), { emit: instance.emit })
+    const setupResult = setup(shallowReadonly(instance.props), { emit: instance.emit })
     // 处理Setup返回参数，保存到setupState属性上
     handelSetupResult(instance, setupResult)
 
