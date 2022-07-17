@@ -9,7 +9,6 @@ export {
 }
 
 export function createVNode(type, props?, children?) {
-  debugger
   const vnode = {
     type,
     props,

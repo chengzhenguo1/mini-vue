@@ -317,13 +317,14 @@ export function createRenderer(options: any) {
 
   function mountElement(vnode: VNodeType, container: Element, parentComponent: VNodeType | null, anchor) {
     const { type, props, children, shapeFlags } = vnode
+    // 创建标签
     const element: Element = hostCreateElement((<string>type))
     // 保存当前的el，后续this.$el调用
     vnode.el = element
 
     for (let key in props) {
       const value = props[key]
-
+      // 处理元素的props,挂载到标签上
       hostPatchProp(element, key, null, value)
     }
 
@@ -332,7 +333,8 @@ export function createRenderer(options: any) {
     } else if (shapeFlags & ShapeFlags.ARRAY_CHILDREN) {
       mountChildren((children as Array<VNodeType>), element, parentComponent, anchor)
     }
-
+    
+    // 插入到container里
     hostInsert(element, container, anchor)
   }
 
@@ -370,7 +372,7 @@ export function createRenderer(options: any) {
       if (!isMounted) {
         // 调用render,传递proxy,使用this.xxx即可访问props和setup的值
         const subTree = (instance.subTree = instance.render.call(proxy, proxy))
-
+        // 处理render返回来的元素
         patch(null, subTree, container, instance, null)
 
         // 取出返回结果，将el赋值给vnode.el上

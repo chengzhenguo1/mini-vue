@@ -1,4 +1,6 @@
+// 利用闭包，将Component保存起来了
 export const emit = (component, event: string, ...args) => {
+  console.log(component)
   const { props } = component
 
   // 获取父组件传进来的props事件，然后找到触发

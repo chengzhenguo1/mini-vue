@@ -55,8 +55,8 @@ export function createComponentInstance(vnode, parent): any {
     emit: () => { }
   }
   
-
-  // 利用bind将component传递进去
+  console.log(component)
+  // 利用bind(闭包)将component传递进去
   component.emit = emit.bind(null, component) as any
 
   return component

@@ -4,6 +4,7 @@ function createElement(type: string) {
   return document.createElement((<string>type))
 }
 
+// 处理element的props,挂载到元素上
 function patchProp(el: Element, key, prevVal, nextVal) {
   const isEvent = key => /^on[A-Z]/.test(key)
 
@@ -37,6 +38,7 @@ function setElementText(el: Element, text: string) {
   el.textContent = text
 }
 
+// 将方法传进去，利用闭包保存
 export const renderer: any = createRenderer({
   createElement,
   patchProp,
@@ -46,7 +48,6 @@ export const renderer: any = createRenderer({
 })
 
 export function createApp(...args) {
-  debugger
   return renderer.createApp(...args)
 }
 
